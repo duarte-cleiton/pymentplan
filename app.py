@@ -57,7 +57,21 @@ def setup_df(number_of_installments, start_date):
         start=start_date, periods=number_of_installments + 1, freq=pd.DateOffset(months=1))
     df = pd.DataFrame(
         {"installment_number": month_since_cred_release, "payment_date": payment_date})
+    df["days"] = (df["payment_date"] - df["payment_date"]
+                  [0]).fillna(pd.Timedelta(seconds=0))
+    df.loc[:, "days"] = timedelta_axis_to_int(df)
     return df
+
+
+def calc_tax_rate(number_of_days):
+    if number_of_days <= 180:
+        return 0.2250
+    elif number_of_days >= 181 and number_of_days <= 360:
+        return 0.2000
+    elif number_of_days >= 361 and number_of_days <= 720:
+        return 0.1750
+    elif number_of_days >= 720:
+        return 0.1500
 
 
 def create_payment_plan(total_amount_released, number_of_installments, monthly_interest_rate, final_iof_payment, monthly_installment, tac, start_date):
@@ -84,10 +98,13 @@ def create_payment_plan(total_amount_released, number_of_installments, monthly_i
            "principal_amortization"] = (-df["interest"] - df["amortization"])
 
     # ADJUST THE LASTE INSTALLMENT TO HAVE ENDING BALANCE ZERO
-    adjust = df.iloc[-1, 4]
+    adjust = df.iloc[-1, 5]
+    df.iloc[-1, 6] = df.iloc[-1, 6] - adjust
+    df.iloc[-1, 7] = df.iloc[-1, 7] + adjust
     df.iloc[-1, 5] = df.iloc[-1, 5] - adjust
-    df.iloc[-1, 6] = df.iloc[-1, 6] + adjust
-    df.iloc[-1, 4] = df.iloc[-1, 4] - adjust
+    # CALC RENTAL TAX
+    df.loc[:, "tax"] = df.apply(lambda row: round(
+        row["interest"] * calc_tax_rate(row["days"]), 2), axis=1)
     return df
 
 
