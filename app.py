@@ -91,6 +91,12 @@ def create_payment_plan(total_amount_released, number_of_installments, monthly_i
     return df
 
 
+@app.route('/hello/{name}')
+def hello_name(name):
+    # '/hello/james' -> {"hello": "james"}
+    return {'hello': name}
+
+
 @app.route('/simulations', methods=['POST'])
 def simulate_loan():
     request_body = app.current_request.json_body
