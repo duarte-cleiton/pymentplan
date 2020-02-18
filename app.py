@@ -128,7 +128,7 @@ def simulate_loan():
     df = create_payment_plan(total_amount_released, number_of_installments,
                              monthly_interest_rate, final_iof_payment, monthly_installment, tac, start_date)
 
-    return Response(status_code=400, headers={'Content-Type': 'application/json'}, body=df.to_json(orient='records', date_format='iso'))
+    return Response(status_code=200, headers={'Content-Type': 'application/json'}, body=df.to_json(orient='records', date_format='iso'))
 
 
 # The view function above will return {"hello": "world"}
